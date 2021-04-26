@@ -1,5 +1,5 @@
-#include "/Users/antony/CLionProjects/prak4/model_lang/scanner.h"
-#include "/Users/antony/CLionProjects/prak4/model_lang/parser.h"
+#include "/Users/antony/CLionProjects/mlang_interpreter/scanner.h"
+#include "/Users/antony/CLionProjects/mlang_interpreter/parser.h"
 // test Scanner
 //int main() {
 //    Scanner scan("/Users/antony/CLionProjects/prak4/model_lang/model_program.txt");
@@ -23,7 +23,7 @@
 // test Parser
 int main() {
     try {
-        Parser P("/Users/antony/CLionProjects/prak4/model_lang/model_program.txt");
+        Parser P("/Users/antony/CLionProjects/mlang_interpreter/model_program.txt");
         P.analyze();
         return 0;
     }

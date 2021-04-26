@@ -10,39 +10,16 @@ void from_st (T& st, T_EL& i) {
     st.pop();
 }
 
-//class StructIdent {
-//public:
-//    string name;
-//    vector<Ident> tid;
-//};
-//
-//class StructType {
-//public:
-//    string name;
-//    vector<Ident> tid;
-//    vector<StructIdent> members;
-//
-//};
-//
-//vector<StructType> TSTRUCT;
-
 class Parser {
     Lex         curr_lex;
     type_of_lex c_type;
     int         c_val;
     Scanner     scan;
     stack<int>          st_int;
-//    stack<int>  st_lex;
     stack<type_of_lex>  st_lex;
-
     int         cycle_depth;
 
     void Program();
-//    void StructDeclars();
-//    void StructDeclar();
-//    void StructVarDeclar(StructType& struct_type);
-//    int StructVarType();
-//    void StructVar(int type_val, StructType struct_type);
     void Declars();
     void Declar();
     void Operats();
@@ -50,12 +27,9 @@ class Parser {
     void CompOperat();
     void TaggedOperat();
     void ExprOperat();
-//    int Type(bool& in_struct);
-//    void Var(int type_val, bool is_struct = false);
-//    void Const(int id_type, int id_val);
     type_of_lex Type();
     void Var(type_of_lex type);
-    void Const(type_of_lex type, int id_val);
+    void Const(type_of_lex type, int id_idx);
     void Expr();
     void Assign();
     void Or();
@@ -64,10 +38,8 @@ class Parser {
     void Ar_expr();
     void Term();
     void Factor();
-//    void Ident(int name_space = 0);
 
-//    void dec(int type_val, int id_val, bool is_struct);
-    void dec(type_of_lex type, int id_val);
+    void dec(type_of_lex type, int id_idx);
     void check_id();
     void check_op();
     void check_not();
@@ -75,7 +47,7 @@ class Parser {
     void eq_type();
     void eq_bool();
     void check_id_in_read();
-//    void check_not_struct();
+
     void gl() {
         curr_lex  = scan.get_lex();
         c_type    = curr_lex.get_type();
@@ -101,144 +73,7 @@ void Parser::analyze() {
     cout << endl << "Yes!!!" << endl;
 }
 
-//// StructDeclars -> /{ StructDeclar /}
-//void Parser::StructDeclars() {
-//    while (c_type == LEX_STRUCT) {
-//        StructDeclar();
-//    }
-//}
-//
-//// StructDeclar -> struct ident { Declar ; /{ Declar ; /} };
-//void Parser::StructDeclar() {
-//    if (c_type == LEX_STRUCT) {
-//        gl();
-//    } else {
-//        throw curr_lex;
-//    }
-//    if (c_type == LEX_ID) {
-//        dec(LEX_STRUCT, c_val, 0);
-//    } else {
-//        throw curr_lex;
-//    }
-//    int struct_type_idx = TSTRUCT.size();
-//    TID[c_val].put_value(struct_type_idx);
-//    TSTRUCT.push_back(StructType());
-//    gl();
-//    if (c_type == LEX_LBRACE) {
-//        gl();
-//    } else {
-//        throw curr_lex;
-//    }
-//    // Declar(struct_id);
-//    StructVarDeclar(TSTRUCT[struct_type_idx]);
-//    if (c_type == LEX_SEMICOLON) {
-//        gl();
-//    } else {
-//        throw curr_lex;
-//    }
-//    while (c_type == LEX_INT || c_type == LEX_STRING || c_type == LEX_BOOL) {
-//        StructVarDeclar(TSTRUCT[struct_type_idx]);
-//        if (c_type == LEX_SEMICOLON) {
-//            gl();
-//        } else {
-//            throw curr_lex;
-//        }
-//    }
-//    if (c_type == LEX_RBRACE) {
-//        gl();
-//    } else {
-//        throw curr_lex;
-//    }
-//}
-//
-//void Parser::StructVarDeclar(StructType& struct_type) {
-//    int type_val = StructVarType();
-//    StructVar(type_val, struct_type);
-//    while (c_type == LEX_COMMA) {
-//        gl();
-//        Var(type_val);
-//    }
-//};
-//
-//
-////  Type -> int | string | boolean
-//int Parser::StructVarType() {
-//    if (c_type == LEX_INT || c_type == LEX_STRING || c_type == LEX_BOOL) {
-//        return c_type;
-//    } else {
-//        throw curr_lex;
-//    }
-//}
-//
-//// Var -> ident | ident = const
-//void Parser::StructVar(int type_val, StructType struct_type) {
-//    if (c_type == LEX_ID) {
-//        StructDec(type_val, struct_type);
-//    } else {
-//        throw curr_lex;
-//    }
-//    int id_val = c_val;
-//    gl();
-//    if (c_type == LEX_ASSIGN) {
-//        gl();
-//        Const(type_val, id_val);
-//    }
-//}
-//
-//// Const -> const
-//void Parser::Const(int type_val, int id_val) {
-//    if (c_type == LEX_NUM) {
-//        if (type_val != LEX_INT) {
-//            cout << "?" << endl;
-//            throw curr_lex;
-//        }
-//        TID[id_val].put_value(c_val);
-//        gl();
-//    } else if (c_type == LEX_STR) {
-//        if (type_val != LEX_STRING) {
-//            throw curr_lex;
-//        }
-//        TID[id_val].put_value(c_val);
-//        gl();
-//    } else if ((c_type == LEX_FALSE) || (c_type == LEX_TRUE)) {
-//        if (type_val != LEX_BOOL) {
-//            throw curr_lex;
-//        }
-//        TID[id_val].put_value(c_type == LEX_TRUE ? 1 : 0);
-//        gl();
-//    } else {
-//        throw curr_lex;
-//    }
-//}
-//
-//void Parser::StructDec(int type_val, StructType& struct_type) {
-//    int id_idx = struct_type.tid.size();
-//    struct_type.tid.push_back(Ident())
-//}
-
-//// Program -> program { StructDeclars Declars Operats }
-//void Parser::Program() {
-//    if (c_type == LEX_PROGRAM) {
-//        gl();
-//    } else {
-//        throw curr_lex;
-//    }
-//    if (c_type == LEX_LBRACE) {
-//        gl();
-//    } else {
-//        throw curr_lex;
-//    }
-//    StructDeclars();
-//    Declars();
-//    Operats();
-//    if (c_type == LEX_RBRACE) {
-//        gl();
-//    } else {
-//        throw curr_lex;
-//    }
-//}
-
-// Program -> program { StructDeclars Declars Operats }
+// Program -> program { Declars Operats }
 void Parser::Program() {
     if (c_type == LEX_PROGRAM) {
         gl();
@@ -273,17 +108,6 @@ void Parser::Declars() {
 
 }
 
-//// Type Var \{ , Var /}
-//void Parser::Declar() {
-//    bool is_struct;
-//    int type_val = Type(is_struct);
-//    Var(type_val, is_struct);
-//    while (c_type == LEX_COMMA) {
-//        gl();
-//        Var(type_val, is_struct);
-//    }
-//}
-
 // Type Var \{ , Var /}
 void Parser::Declar() {
     type_of_lex type = Type();
@@ -305,24 +129,6 @@ type_of_lex Parser::Type() {
     }
 }
 
-//// Var -> ident | ident = const
-//void Parser::Var(int type_val, bool is_struct) {
-//    if (c_type == LEX_ID) {
-//        dec(type_val, c_val, is_struct);
-//    } else {
-//        throw curr_lex;
-//    }
-//    int id_val = c_val;
-//    gl();
-//    if (c_type == LEX_ASSIGN) {
-//        if (is_struct) {
-//            throw curr_lex;
-//        }
-//        gl();
-//        Const(type_val, id_val);
-//    }
-//}
-
 // Var -> ident | ident = const
 void Parser::Var(type_of_lex type) {
     if (c_type == LEX_ID) {
@@ -330,67 +136,38 @@ void Parser::Var(type_of_lex type) {
     } else {
         throw curr_lex;
     }
-    int id_val = c_val;
+    int id_idx = c_val;
     gl();
     if (c_type == LEX_ASSIGN) {
         gl();
-        Const(type, id_val);
+        Const(type, id_idx);
     }
 }
 
-
-//// Const -> const
-//void Parser::Const(int type_val, int id_val) {
-//    if (c_type == LEX_NUM) {
-//        if (type_val != LEX_INT) {
-//            cout << "?" << endl;
-//            throw curr_lex;
-//        }
-//        TID[id_val].put_value(c_val);
-//        gl();
-//    } else if (c_type == LEX_STR) {
-//        if (type_val != LEX_STRING) {
-//            throw curr_lex;
-//        }
-//        TID[id_val].put_value(c_val);
-//        gl();
-//    } else if ((c_type == LEX_FALSE) || (c_type == LEX_TRUE)) {
-//        if (type_val != LEX_BOOL) {
-//            throw curr_lex;
-//        }
-//        TID[id_val].put_value(c_type == LEX_TRUE ? 1 : 0);
-//        gl();
-//    } else {
-//        throw curr_lex;
-//    }
-//}
-
 // Const -> const
-void Parser::Const(type_of_lex type, int id_val) {
+void Parser::Const(type_of_lex type, int id_idx) {
     if (c_type == LEX_NUM) {
         if (type != LEX_INT) {
-            cout << "?" << endl;
             throw curr_lex;
         }
-        TID[id_val].put_value(c_val);
+        TID[id_idx].put_value(c_val);
         gl();
     } else if (c_type == LEX_STR) {
         if (type != LEX_STRING) {
             throw curr_lex;
         }
-        TID[id_val].put_value(c_val);
+        TID[id_idx].put_value(c_val);
         gl();
     } else if ((c_type == LEX_FALSE) || (c_type == LEX_TRUE)) {
         if (type != LEX_BOOL) {
             throw curr_lex;
         }
-        TID[id_val].put_value(c_type == LEX_TRUE ? 1 : 0);
+        TID[id_idx].put_value(c_type == LEX_TRUE ? 1 : 0);
         gl();
     } else {
         throw curr_lex;
     }
 }
-
 
 // Operats -> /{ Operat /}
 void Parser::Operats() {
@@ -404,7 +181,7 @@ void Parser::Operats() {
 }
 
 void Parser::Operat() {
-    cout << "Operat" << endl;
+    cout << "Operat " << curr_lex << endl;
     if (c_type == LEX_IF) {
         // if ( Expr ) Operat else Operat
         gl();
@@ -751,48 +528,12 @@ void Parser::Factor() {
     }
 }
 
-//void Parser::Ident(int name_space) {
-//    if (c_type == LEX_ID) {
-//        if (TID[c_val].get_namespace() != name_space) {
-//            throw curr_lex;
-//        }
-//        if (TID[c_val].get_type() == LEX_STRUCT) {
-//            int struct_val = c_val;
-//            gl();
-//            if (c_type == LEX_POINT) {
-//                gl();
-//                Ident(struct_val);
-//            } else {
-//
-//            }
-//        }
-//    } else {
-//        throw curr_lex;
-//    }
-//}
-
-
-
-//void Parser::dec(int type_val, int id_val, bool is_struct) {
-//    if (TID[id_val].get_declare())
-//        throw "twice";
-//    else {
-//        TID[id_val].put_declare();
-//        if (is_struct) {
-//            TID[id_val].put_is_struct();
-//            TID[id_val].put_type(type_val);
-//        } else {
-//            TID[id_val].put_type(type_val);
-//        }
-//    }
-//}
-
-void Parser::dec(type_of_lex type, int id_val) {
-    if (TID[id_val].get_declare())
+void Parser::dec(type_of_lex type, int id_idx) {
+    if (TID[id_idx].get_declare())
         throw "twice";
     else {
-        TID[id_val].put_declare();
-        TID[id_val].put_type(type);
+        TID[id_idx].put_declare();
+        TID[id_idx].put_type(type);
     }
 }
 
@@ -878,11 +619,5 @@ void Parser::check_id_in_read() {
         throw "not declared";
     }
 }
-
-//void Parser::check_not_struct() {
-//    if (st_lex.top() == LEX_STRUCT) {
-//        throw "struct ident in expression";
-//    }
-//}
 
 #endif //PRAK4_PARSER_H

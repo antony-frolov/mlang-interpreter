@@ -53,22 +53,17 @@ class Ident {
     string      name;
     bool        declare;
     type_of_lex type_val;
-//    int         type_val;
-    bool        is_struct;
     bool        assign;
     int         value;
-    int         name_space;
 public:
     explicit Ident() {
         declare = false;
         assign = false;
-        is_struct = false;
     }
     explicit Ident (const string& n) {
         name = n;
         declare = false;
         assign = false;
-        is_struct = false;
     }
     bool operator==(const string& s) const {
         return name == s;
@@ -78,17 +73,13 @@ public:
     void put_declare() { declare = true; }
     type_of_lex get_type() const { return type_val; }
     void put_type(type_of_lex t) { type_val = t; }
-//    int get_type() const { return type_val; }
-//    void put_type(int t) { type_val = t; }
     bool get_assign() const { return assign; }
     void put_assign() { assign = true; }
     int get_value() const { return value; }
     void put_value(int v) { value = v; }
-//    bool get_is_struct() const { return is_struct; }
-//    void put_is_struct() { is_struct = true; }
 };
 
-vector<Ident> TID = { Ident() };
+vector<Ident> TID;
 
 vector<const string> TSTR;
 
@@ -124,14 +115,14 @@ class Scanner {
         return 0;
     }
     void gc() { c = fgetc(fp); }
-    stack<Lex> st_lex;
+    stack<const Lex> st_lex;
 public:
     static const vector<const char*> TW, TD;
     explicit Scanner (const char* program) {
         fp = fopen(program,"r");
     }
     Lex get_lex();
-    void unget_lex(Lex& lex) {
+    void unget_lex(const Lex& lex) {
         st_lex.push(lex);
     }
 };
