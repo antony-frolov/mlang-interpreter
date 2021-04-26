@@ -69,7 +69,8 @@ void Parser::analyze() {
     if (c_type != LEX_FIN) {
         throw curr_lex;
     }
-    // for (Lex l : poliz) cout << l;
+    for (Lex l : poliz)
+        cout << l;
     cout << endl << "Yes!!!" << endl;
 }
 
@@ -182,6 +183,7 @@ void Parser::Operats() {
 
 void Parser::Operat() {
     cout << "Operat " << curr_lex << endl;
+    int if_pl0, if_pl1, wh_pl0, wh_pl1, for_pl0, for_pl1, for_pl2, for_pl3;
     if (c_type == LEX_IF) {
         // if ( Expr ) Operat else Operat
         gl();
@@ -189,12 +191,20 @@ void Parser::Operat() {
             gl();
             Expr();
             eq_bool();
+            if_pl0 = poliz.size();
+            poliz.push_back(Lex());
+            poliz.push_back(Lex(POLIZ_FGO));
             if (c_type == LEX_RPAREN) {
                 gl();
                 Operat();
+                if_pl1 = poliz.size ();
+                poliz.push_back(Lex());
+                poliz.push_back(Lex(POLIZ_GO));
+                poliz[if_pl0] = Lex(POLIZ_LABEL,poliz.size());
                 if (c_type == LEX_ELSE) {
                     gl();
                     Operat();
+                    poliz[if_pl1] = Lex(POLIZ_LABEL, poliz.size());
                 } else {
                     throw curr_lex;
                 }
@@ -222,13 +232,21 @@ void Parser::Operat() {
             } else {
                 throw curr_lex;
             }
+            for_pl0 = poliz.size();
             if ((c_type == LEX_ID) || (c_type == LEX_NOT) ||
                 (c_type == LEX_MINUS) || (c_type == LEX_NUM) ||
                 (c_type == LEX_STR) || (c_type == LEX_FALSE) ||
                 (c_type == LEX_TRUE) || (c_type == LEX_LPAREN)) {
                 Expr();
                 eq_bool();
+                for_pl1 = poliz.size();
+                poliz.push_back(Lex());
+                poliz.push_back(Lex(POLIZ_FGO));
             }
+            for_pl2 = poliz.size();
+            poliz.push_back(Lex());
+            poliz.push_back(Lex(POLIZ_GO));
+            for_pl3 = poliz.size();
             if (c_type == LEX_SEMICOLON) {
                 gl();
             } else {
@@ -241,27 +259,40 @@ void Parser::Operat() {
                 Expr();
                 st_lex.pop();
             }
+            poliz.push_back(Lex(POLIZ_LABEL, for_pl0));
+            poliz.push_back(Lex(POLIZ_GO));
             if (c_type == LEX_RPAREN) {
                 gl();
             } else {
                 throw curr_lex;
             }
+            poliz[for_pl2] = Lex(POLIZ_LABEL, poliz.size());
             Operat();
+            poliz.push_back(Lex(POLIZ_LABEL, for_pl3));
+            poliz.push_back(Lex(POLIZ_GO));
+            poliz[for_pl1] = Lex(POLIZ_LABEL, poliz.size());
         } else {
             throw curr_lex;
         }
         cycle_depth -= 1;
     } else if (c_type == LEX_WHILE) {
-        cycle_depth += 1;
         // while ( Expr ) Operat
+        wh_pl0 = poliz.size();
+        cycle_depth += 1;
         gl();
         if (c_type == LEX_LPAREN) {
             gl();
             Expr();
             eq_bool();
+            wh_pl1 = poliz.size();
+            poliz.push_back(Lex());
+            poliz.push_back(Lex(POLIZ_FGO));
             if (c_type == LEX_RPAREN) {
                 gl();
                 Operat();
+                poliz.push_back(Lex(POLIZ_LABEL, wh_pl0));
+                poliz.push_back(Lex(POLIZ_GO));
+                poliz[wh_pl1] = Lex(POLIZ_LABEL, poliz.size());
             } else {
                 throw curr_lex;
             }
@@ -304,12 +335,14 @@ void Parser::Operat() {
         }
         if (c_type == LEX_ID) {
             check_id_in_read();
+            poliz.push_back(Lex(POLIZ_ADDRESS, c_val));
             gl();
         } else {
             throw curr_lex;
         }
         if (c_type == LEX_RPAREN) {
             gl();
+            poliz.push_back(Lex(LEX_READ));
         } else {
             throw curr_lex;
         }
@@ -328,10 +361,12 @@ void Parser::Operat() {
         }
         Expr();
         st_lex.pop();
+        poliz.push_back(Lex(LEX_WRITE));
         while (c_type == LEX_COMMA) {
             gl();
             Expr();
             st_lex.pop();
+            poliz.push_back(Lex(LEX_WRITE));
         }
         if (c_type == LEX_RPAREN) {
             gl();
@@ -389,6 +424,7 @@ void Parser::CompOperat() {
 void Parser::ExprOperat() {
     Expr();
     st_lex.pop();
+    poliz.push_back(Lex(LEX_SEMICOLON));
     if (c_type == LEX_SEMICOLON) {
         gl();
     } else {
@@ -400,7 +436,6 @@ void Parser::ExprOperat() {
 void Parser::Expr() {
     cout << "Expr " << curr_lex << endl;
     Assign();
-//    check_not_struct();
 }
 
 // Assign -> ident = Assign | Or
@@ -410,13 +445,16 @@ void Parser::Assign() {
         Lex lex1 = curr_lex;
         gl();
         if (c_type == LEX_ASSIGN) {
-            int temp_c_val = curr_lex.get_value();
+//            int temp_c_val = curr_lex.get_value();
+            int temp_c_val = c_val;
             c_val = lex1.get_value();
             check_id();
+            poliz.push_back(Lex(POLIZ_ADDRESS, c_val));
             c_val = temp_c_val;
             gl();
             Assign();
             eq_type();
+            poliz.push_back(Lex(LEX_ASSIGN));
         } else {
             ungl(curr_lex);
             ungl(lex1);
@@ -502,18 +540,23 @@ void Parser::Factor() {
         check_minus();
     } else if (c_type == LEX_NUM) {
         st_lex.push(LEX_INT);
+        poliz.push_back (curr_lex);
         gl();
     } else if (c_type == LEX_STR) {
         st_lex.push(LEX_STRING);
+        poliz.push_back (curr_lex);
         gl();
     } else if (c_type == LEX_FALSE) {
         st_lex.push(LEX_BOOL);
+        poliz.push_back (Lex(LEX_FALSE, 0));
         gl();
     } else if (c_type == LEX_TRUE) {
         st_lex.push(LEX_BOOL);
+        poliz.push_back (Lex(LEX_TRUE, 1));
         gl();
     } else if (c_type == LEX_ID) {
         check_id();
+        poliz.push_back (Lex(LEX_ID, c_val));
         gl();
     } else if (c_type == LEX_LPAREN) {
         gl();

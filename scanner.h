@@ -174,23 +174,51 @@ const vector<const char*> Scanner::TD = {
         nullptr
 };
 
-ostream& operator<<(ostream& s, Lex l) {
-    s << '(' << l.t_lex << ',' << l.v_lex << ");";
-    if ((l.t_lex >= LEX_PROGRAM) && (l.t_lex <= LEX_GOTO)) {
-        cout << " W " << Scanner::TW[l.v_lex];
-    } else if ((l.t_lex >= LEX_FIN) && (l.t_lex <= LEX_RBRACE)) {
-        cout << " D " << Scanner::TD[l.v_lex];
-    } else if (l.t_lex == LEX_NUM) {
-        cout << " NUM " << l.v_lex;
-    } else if (l.t_lex == LEX_STR) {
-        cout << " STR " << TSTR[l.v_lex];
-    } else if (l.t_lex == LEX_ID) {
-        cout << " ID " << TID[l.v_lex].get_name();
-    } else {
-        cout << " not valid type of lex";
-    }
+
+ostream& operator<<(ostream &s, Lex l) {
+    string t;
+    if ( l.t_lex <= LEX_GOTO )
+        t = Scanner::TW[l.t_lex];
+    else if (l.t_lex >= LEX_FIN && l.t_lex <= LEX_RBRACE)
+        t = Scanner::TD[l.t_lex - LEX_FIN];
+    else if (l.t_lex == LEX_NUM)
+        t = "NUMB";
+    else if (l.t_lex == LEX_STR)
+        t = "STR";
+    else if (l.t_lex == LEX_ID)
+        t = TID[l.v_lex].get_name();
+    else if ( l.t_lex == POLIZ_LABEL )
+        t = "Label";
+    else if ( l.t_lex == POLIZ_ADDRESS )
+        t = "Addr";
+    else if ( l.t_lex == POLIZ_GO )
+        t = "!";
+    else if ( l.t_lex == POLIZ_FGO )
+        t = "!F";
+    else
+        throw l;
+    s << '(' << t << ',' << l.v_lex << ");" << endl;
     return s;
 }
+
+
+//ostream& operator<<(ostream& s, Lex l) {
+//    s << '(' << l.t_lex << ',' << l.v_lex << ");";
+//    if ((l.t_lex >= LEX_PROGRAM) && (l.t_lex <= LEX_GOTO)) {
+//        cout << " W " << Scanner::TW[l.v_lex];
+//    } else if ((l.t_lex >= LEX_FIN) && (l.t_lex <= LEX_RBRACE)) {
+//        cout << " D " << Scanner::TD[l.v_lex];
+//    } else if (l.t_lex == LEX_NUM) {
+//        cout << " NUM " << l.v_lex;
+//    } else if (l.t_lex == LEX_STR) {
+//        cout << " STR " << TSTR[l.v_lex];
+//    } else if (l.t_lex == LEX_ID) {
+//        cout << " ID " << TID[l.v_lex].get_name();
+//    } else {
+//        cout << " not valid type of lex";
+//    }
+//    return s;
+//}
 
 Lex Scanner::get_lex() {
     if (st_lex.size() > 0) {
