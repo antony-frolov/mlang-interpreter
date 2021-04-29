@@ -11,6 +11,7 @@ void from_st (T& st, T_EL& i) {
 }
 
 vector<vector<int>> TGOTO;
+stack<vector<int>> TBREAK;
 
 class Parser {
     Lex         curr_lex;
@@ -220,6 +221,7 @@ void Parser::Operat() {
         }
     } else if (c_type == LEX_FOR) {
         cycle_depth += 1;
+        TBREAK.push(vector<int>());
         // for ( /[ Expr /] ; /[ Expr /] ; /[ Expr /] ) Operat
         gl();
         if (c_type == LEX_LPAREN) {
@@ -279,6 +281,11 @@ void Parser::Operat() {
             poliz.push_back(Lex(POLIZ_LABEL, for_pl3));
             poliz.push_back(Lex(POLIZ_GO));
             poliz[for_pl1] = Lex(POLIZ_LABEL, poliz.size());
+            while (!TBREAK.top().empty()) {
+                poliz[TBREAK.top().back()] = Lex(POLIZ_LABEL, poliz.size());
+                TBREAK.top().pop_back();
+            }
+            TBREAK.pop();
         } else {
             throw curr_lex;
         }
@@ -287,6 +294,7 @@ void Parser::Operat() {
         // while ( Expr ) Operat
         wh_pl0 = poliz.size();
         cycle_depth += 1;
+        TBREAK.push(vector<int>());
         gl();
         if (c_type == LEX_LPAREN) {
             gl();
@@ -301,6 +309,11 @@ void Parser::Operat() {
                 poliz.push_back(Lex(POLIZ_LABEL, wh_pl0));
                 poliz.push_back(Lex(POLIZ_GO));
                 poliz[wh_pl1] = Lex(POLIZ_LABEL, poliz.size());
+                while (!TBREAK.top().empty()) {
+                    poliz[TBREAK.top().back()] = Lex(POLIZ_LABEL, poliz.size());
+                    TBREAK.top().pop_back();
+                }
+                TBREAK.pop();
             } else {
                 throw curr_lex;
             }
@@ -313,6 +326,9 @@ void Parser::Operat() {
         if (cycle_depth == 0) {
             throw "break out of cycle";
         }
+        TBREAK.top().push_back(poliz.size());
+        poliz.push_back(Lex());
+        poliz.push_back(Lex(POLIZ_GO));
         gl();
         if (c_type == LEX_SEMICOLON) {
             gl();
