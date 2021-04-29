@@ -10,6 +10,8 @@ void from_st (T& st, T_EL& i) {
     st.pop();
 }
 
+vector<vector<int>> TGOTO;
+
 class Parser {
     Lex         curr_lex;
     type_of_lex c_type;
@@ -47,6 +49,8 @@ class Parser {
     void eq_type();
     void eq_bool();
     void check_id_in_read();
+    void dec_label(int id_idx);
+    void goto_label();
 
     void gl() {
         curr_lex  = scan.get_lex();
@@ -226,12 +230,14 @@ void Parser::Operat() {
                 (c_type == LEX_TRUE) || (c_type == LEX_LPAREN)) {
                 Expr();
                 st_lex.pop();
+                poliz.push_back(Lex(LEX_SEMICOLON));
             }
             if (c_type == LEX_SEMICOLON) {
                 gl();
             } else {
                 throw curr_lex;
             }
+
             for_pl0 = poliz.size();
             if ((c_type == LEX_ID) || (c_type == LEX_NOT) ||
                 (c_type == LEX_MINUS) || (c_type == LEX_NUM) ||
@@ -239,10 +245,11 @@ void Parser::Operat() {
                 (c_type == LEX_TRUE) || (c_type == LEX_LPAREN)) {
                 Expr();
                 eq_bool();
-                for_pl1 = poliz.size();
-                poliz.push_back(Lex());
-                poliz.push_back(Lex(POLIZ_FGO));
             }
+            for_pl1 = poliz.size();
+            poliz.push_back(Lex());
+            poliz.push_back(Lex(POLIZ_FGO));
+
             for_pl2 = poliz.size();
             poliz.push_back(Lex());
             poliz.push_back(Lex(POLIZ_GO));
@@ -258,6 +265,7 @@ void Parser::Operat() {
                 (c_type == LEX_TRUE) || (c_type == LEX_LPAREN)) {
                 Expr();
                 st_lex.pop();
+                poliz.push_back(Lex(LEX_SEMICOLON));
             }
             poliz.push_back(Lex(POLIZ_LABEL, for_pl0));
             poliz.push_back(Lex(POLIZ_GO));
@@ -312,10 +320,9 @@ void Parser::Operat() {
             throw curr_lex;
         }
     } else if (c_type == LEX_GOTO) {
-        // goto ident ;
         gl();
         if (c_type == LEX_ID) {
-            check_id();
+            goto_label();
             gl();
         } else {
             throw curr_lex;
@@ -386,7 +393,7 @@ void Parser::Operat() {
         gl();
         if (c_type == LEX_COLON) {
             int id_val = lex1.get_value();
-            dec(LEX_GOTO, id_val);
+            dec_label(id_val);
             gl();
             Operat();
         } else {
@@ -660,6 +667,50 @@ void Parser::eq_bool() {
 void Parser::check_id_in_read() {
     if (!TID[c_val].get_declare()) {
         throw "not declared";
+    }
+}
+
+void Parser::dec_label(int id_idx) {
+    if (TID[id_idx].get_declare())
+        if (TID[id_idx].get_assign()) {
+            throw "two lables one name";
+        } else {
+            while (!TGOTO[TID[id_idx].get_value()].empty()) {
+                poliz[TGOTO[TID[id_idx].get_value()].back()] =
+                        Lex(POLIZ_LABEL, poliz.size());
+                TGOTO[TID[id_idx].get_value()].pop_back();
+            }
+            TID[id_idx].put_value(poliz.size());
+            TID[id_idx].put_assign();
+        }
+    else {
+        TID[id_idx].put_declare();
+        TID[id_idx].put_assign();
+        TID[id_idx].put_type(LEX_GOTO);
+        TID[id_idx].put_value(poliz.size());
+    }
+}
+
+void Parser::goto_label() {
+    if (TID[c_val].get_declare()) {
+        if (TID[c_val].get_type() == LEX_GOTO) {
+            if (TID[c_val].get_assign()) {
+                poliz.push_back(Lex(POLIZ_LABEL, TID[c_val].get_value()));
+                poliz.push_back(Lex(POLIZ_GO));
+            } else {
+                TGOTO[TID[c_val].get_value()].push_back(poliz.size());
+                poliz.push_back(Lex());
+                poliz.push_back(Lex(POLIZ_GO));
+            }
+        } else {
+            throw "expected label";
+        }
+    } else {
+        TID[c_val].put_value(TGOTO.size());
+        TGOTO.push_back(vector<int>());
+        TGOTO[TID[c_val].get_value()].push_back(poliz.size());
+        poliz.push_back(Lex());
+        poliz.push_back(Lex(POLIZ_GO));
     }
 }
 
