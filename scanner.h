@@ -26,6 +26,11 @@ enum type_of_lex {
     LEX_EQ, LEX_NEQ, LEX_LSS, LEX_GTR, LEX_LEQ, LEX_GEQ,
     LEX_LPAREN, LEX_RPAREN, LEX_LBRACE, LEX_RBRACE,
 
+    LEX_SPLUS,
+    LEX_SEQ, LEX_SNEQ, LEX_SLSS, LEX_SGTR,
+    LEX_SASSIGN,
+    LEX_SWRITE,
+
     LEX_NUM, // 39
     LEX_STR, // 40
     LEX_ID, // 41
@@ -81,7 +86,7 @@ public:
 
 vector<Ident> TID;
 
-vector<const string> TSTR;
+vector<string> TSTR;
 
 int put (const string& buf) {
     vector<Ident>::const_iterator k;
@@ -93,7 +98,7 @@ int put (const string& buf) {
 }
 
 int put_str (const string& buf) {
-    vector<const string>::const_iterator k;
+    vector<string>::iterator k;
     if ( (k = find(TSTR.begin(), TSTR.end(), buf)) != TSTR.end() ) {
         return k - TSTR.begin();
     }
