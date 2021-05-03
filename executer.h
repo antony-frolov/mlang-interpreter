@@ -12,7 +12,7 @@ void Executer::execute(vector<Lex>& poliz) {
     int i, j, index = 0, size = poliz.size();
     while (index < size) {
         pc_el = poliz[index];
-        cout << index << endl;
+        cout << "-" << index << endl;
         switch (pc_el.get_type()) {
             case LEX_TRUE: case LEX_FALSE: case LEX_NUM: case LEX_STR: case POLIZ_ADDRESS: case POLIZ_LABEL:
                 args.push(pc_el.get_value());
@@ -64,22 +64,22 @@ void Executer::execute(vector<Lex>& poliz) {
                 cout << TSTR[j] << endl;
                 break;
 
-            case LEX_READ: // TODO add string support
+            case LEX_READ:
                 int k;
                 from_st (args, i);
                 if (TID[i].get_type() == LEX_INT) {
-                    cout << "Input int value for" << TID[i].get_name() << endl;
+                    cout << "Input int value for " << TID[i].get_name() << endl;
                     cin >> k;
                     TID[i].put_value(k);
                 } else if (TID[i].get_type() == LEX_STRING) {
                     string s;
-                    cout << "Input string for" << TID[i].get_name() << endl;
+                    cout << "Input string for " << TID[i].get_name() << endl;
                     cin >> s;
                     TSTR[TID[i].get_value()] = s;
                 } else {
                     string j;
                     while (1) {
-                        cout << "Input boolean value (true or false) for" << TID[i].get_name() << endl;
+                        cout << "Input boolean value (true or false) for " << TID[i].get_name() << endl;
                         cin >> j;
                         if (j != "true" && j != "false") {
                             cout << "Error in input:true/false" << endl;
@@ -103,7 +103,7 @@ void Executer::execute(vector<Lex>& poliz) {
                 from_st (args, i);
                 from_st (args, j);
                 args.push(TSTR.size());
-                TSTR.push_back(TSTR[i] + TSTR[j]);
+                TSTR.push_back(TSTR[j] + TSTR[i]);
                 break;
 
             case LEX_TIMES:
@@ -209,7 +209,6 @@ void Executer::execute(vector<Lex>& poliz) {
                 break;
 
             default:
-                cout << pc_el << endl;
                 throw "POLIZ: unexpected elem";
         }//end of switch
         ++index;

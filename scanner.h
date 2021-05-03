@@ -1,5 +1,5 @@
-#ifndef PRAK4_SCANNER_H
-#define PRAK4_SCANNER_H
+#ifndef MLANG_INTERPRETER_SCANNER_H
+#define MLANG_INTERPRETER_SCANNER_H
 
 #include "iostream"
 #include "cstdio"
@@ -90,16 +90,16 @@ vector<string> TSTR;
 
 int put (const string& buf) {
     vector<Ident>::const_iterator k;
-    if ( (k = find(TID.begin(), TID.end(), buf)) != TID.end() ) {
+    if ((k = find(TID.begin(), TID.end(), buf)) != TID.end()) {
         return k - TID.begin();
     }
     TID.push_back(Ident(buf));
     return TID.size() - 1;
 }
 
-int put_str (const string& buf) {
-    vector<string>::iterator k;
-    if ( (k = find(TSTR.begin(), TSTR.end(), buf)) != TSTR.end() ) {
+int put_str(const string& buf) {
+    vector<string>::const_iterator k;
+    if ((k = find(TSTR.begin(), TSTR.end(), buf)) != TSTR.end() ) {
         return k - TSTR.begin();
     }
     TSTR.push_back(buf);
@@ -109,7 +109,7 @@ int put_str (const string& buf) {
 class Scanner {
     FILE *  fp;
     char    c;
-    static int look (const string& buf, const vector<const char*>& list) {
+    static int look(const string& buf, const vector<const char*>& list) {
         int i = 0;
         while (list[i]) {
             if (buf == list[i]) {
@@ -123,7 +123,7 @@ class Scanner {
     stack<const Lex> st_lex;
 public:
     static const vector<const char*> TW, TD;
-    explicit Scanner (const char* program) {
+    explicit Scanner(const char* program) {
         fp = fopen(program,"r");
     }
     Lex get_lex();
@@ -182,16 +182,16 @@ const vector<const char*> Scanner::TD = {
 
 ostream& operator<<(ostream &s, Lex l) {
     string t;
-    if ( l.t_lex <= LEX_GOTO )
+    if (l.t_lex <= LEX_GOTO)
         t = Scanner::TW[l.t_lex];
     else if (l.t_lex >= LEX_FIN && l.t_lex <= LEX_RBRACE)
         t = Scanner::TD[l.t_lex - LEX_FIN];
     else if (l.t_lex == LEX_NUM)
-        t = "NUMB";
+        t = "Int";
     else if (l.t_lex == LEX_STR)
-        t = "STR";
+        t = "Str";
     else if (l.t_lex == LEX_ID)
-        t = TID[l.v_lex].get_name();
+        t = "Id " + TID[l.v_lex].get_name();
     else if ( l.t_lex == POLIZ_LABEL )
         t = "Label";
     else if ( l.t_lex == POLIZ_ADDRESS )
@@ -200,30 +200,25 @@ ostream& operator<<(ostream &s, Lex l) {
         t = "!";
     else if ( l.t_lex == POLIZ_FGO )
         t = "!F";
+    else if ( l.t_lex == LEX_SWRITE )
+        t = "str write";
+    else if ( l.t_lex == LEX_SASSIGN )
+        t = "str =";
+    else if ( l.t_lex == LEX_SPLUS )
+        t = "str +";
+    else if ( l.t_lex == LEX_SEQ )
+        t = "str ==";
+    else if ( l.t_lex == LEX_SNEQ )
+        t = "str !=";
+    else if ( l.t_lex == LEX_SGTR )
+        t = "str >";
+    else if ( l.t_lex == LEX_SLSS )
+        t = "str <";
     else
         throw l;
     s << '(' << t << ',' << l.v_lex << ");" << endl;
     return s;
 }
-
-
-//ostream& operator<<(ostream& s, Lex l) {
-//    s << '(' << l.t_lex << ',' << l.v_lex << ");";
-//    if ((l.t_lex >= LEX_PROGRAM) && (l.t_lex <= LEX_GOTO)) {
-//        cout << " W " << Scanner::TW[l.v_lex];
-//    } else if ((l.t_lex >= LEX_FIN) && (l.t_lex <= LEX_RBRACE)) {
-//        cout << " D " << Scanner::TD[l.v_lex];
-//    } else if (l.t_lex == LEX_NUM) {
-//        cout << " NUM " << l.v_lex;
-//    } else if (l.t_lex == LEX_STR) {
-//        cout << " STR " << TSTR[l.v_lex];
-//    } else if (l.t_lex == LEX_ID) {
-//        cout << " ID " << TID[l.v_lex].get_name();
-//    } else {
-//        cout << " not valid type of lex";
-//    }
-//    return s;
-//}
 
 Lex Scanner::get_lex() {
     if (st_lex.size() > 0) {
@@ -240,21 +235,21 @@ Lex Scanner::get_lex() {
         switch (CS) {
             case H:
                 if (c == ' ' || c == '\n' || c == '\r' || c == '\t') {}
-                else if (isalpha(c)) { // +
+                else if (isalpha(c)) {
                     buf.push_back(c);
                     CS = IDENT;
-                } else if (isdigit(c)) { // +
+                } else if (isdigit(c)) {
                     d = c - '0';
                     CS = NUMB;
-                } else if (c == '-') { //
+                } else if (c == '-') {
                     CS = MINUS;
-                } else if (c == '+') { //
+                } else if (c == '+') {
                     CS = PLUS;
-                } else if (c == '"') { // +
+                } else if (c == '"') {
                     CS = STR;
-                } else if ( c == '/' ) { // +
+                } else if ( c == '/' ) {
                     CS = CBEG;
-                } else if (c == '=' || c == '<' || c == '>') { // +
+                } else if (c == '=' || c == '<' || c == '>') {
                     buf.push_back(c);
                     CS = ALGE;
                 } else if (c == EOF) {
@@ -371,4 +366,4 @@ Lex Scanner::get_lex() {
     while (true);
 } // end of getlex()
 
-#endif //PRAK4_SCANNER_H
+#endif //MLANG_INTERPRETER_SCANNER_H

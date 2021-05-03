@@ -11,16 +11,14 @@ void from_st (T& st, T_EL& i) {
 }
 
 vector<vector<int>> TGOTO;
-stack<vector<int>> TBREAK;
+stack<vector<int>>  STBREAK;
 
 class Parser {
     Lex         curr_lex;
     type_of_lex c_type;
     int         c_val;
     Scanner     scan;
-    stack<int>          st_int;
     stack<type_of_lex>  st_lex;
-    int         cycle_depth;
 
     void Program();
     void Declars();
@@ -58,13 +56,13 @@ class Parser {
         c_type    = curr_lex.get_type();
         c_val     = curr_lex.get_value();
     }
-    void ungl(Lex& lex) {
+    void ungl(const Lex& lex) {
         scan.unget_lex(lex);
     }
 
 public:
     vector<Lex> poliz;
-    explicit Parser(const char* program) : scan(program), cycle_depth(0) {}
+    explicit Parser(const char* program) : scan(program) {}
     void analyze();
 };
 
@@ -190,7 +188,7 @@ void Parser::Operats() {
 }
 
 void Parser::Operat() {
-    cout << "Operat " << curr_lex << endl;
+//  cout << "Operat " << curr_lex << endl;
     int if_pl0, if_pl1, wh_pl0, wh_pl1, for_pl0, for_pl1, for_pl2, for_pl3;
     if (c_type == LEX_IF) {
         // if ( Expr ) Operat else Operat
@@ -223,8 +221,7 @@ void Parser::Operat() {
             throw curr_lex;
         }
     } else if (c_type == LEX_FOR) {
-        cycle_depth += 1;
-        TBREAK.push(vector<int>());
+        STBREAK.push(vector<int>());
         // for ( /[ Expr /] ; /[ Expr /] ; /[ Expr /] ) Operat
         gl();
         if (c_type == LEX_LPAREN) {
@@ -284,20 +281,18 @@ void Parser::Operat() {
             poliz.push_back(Lex(POLIZ_LABEL, for_pl3));
             poliz.push_back(Lex(POLIZ_GO));
             poliz[for_pl1] = Lex(POLIZ_LABEL, poliz.size());
-            while (!TBREAK.top().empty()) {
-                poliz[TBREAK.top().back()] = Lex(POLIZ_LABEL, poliz.size());
-                TBREAK.top().pop_back();
+            while (!STBREAK.top().empty()) {
+                poliz[STBREAK.top().back()] = Lex(POLIZ_LABEL, poliz.size());
+                STBREAK.top().pop_back();
             }
-            TBREAK.pop();
+            STBREAK.pop();
         } else {
             throw curr_lex;
         }
-        cycle_depth -= 1;
     } else if (c_type == LEX_WHILE) {
         // while ( Expr ) Operat
         wh_pl0 = poliz.size();
-        cycle_depth += 1;
-        TBREAK.push(vector<int>());
+        STBREAK.push(vector<int>());
         gl();
         if (c_type == LEX_LPAREN) {
             gl();
@@ -312,24 +307,23 @@ void Parser::Operat() {
                 poliz.push_back(Lex(POLIZ_LABEL, wh_pl0));
                 poliz.push_back(Lex(POLIZ_GO));
                 poliz[wh_pl1] = Lex(POLIZ_LABEL, poliz.size());
-                while (!TBREAK.top().empty()) {
-                    poliz[TBREAK.top().back()] = Lex(POLIZ_LABEL, poliz.size());
-                    TBREAK.top().pop_back();
+                while (!STBREAK.top().empty()) {
+                    poliz[STBREAK.top().back()] = Lex(POLIZ_LABEL, poliz.size());
+                    STBREAK.top().pop_back();
                 }
-                TBREAK.pop();
+                STBREAK.pop();
             } else {
                 throw curr_lex;
             }
         } else {
             throw curr_lex;
         }
-        cycle_depth -= 1;
     } else if (c_type == LEX_BREAK) {
         // break ;
-        if (cycle_depth == 0) {
-            throw "break out of cycle";
+        if (STBREAK.size() == 0) {
+            throw "break occurred out of cycle";
         }
-        TBREAK.top().push_back(poliz.size());
+        STBREAK.top().push_back(poliz.size());
         poliz.push_back(Lex());
         poliz.push_back(Lex(POLIZ_GO));
         gl();
@@ -384,17 +378,21 @@ void Parser::Operat() {
             throw curr_lex;
         }
         Expr();
-        st_lex.pop();
-        if (poliz.back().get_type() == LEX_STRING) {
+        if (st_lex.top() == LEX_STRING) {
             poliz.push_back(Lex(LEX_SWRITE));
         } else {
             poliz.push_back(Lex(LEX_WRITE));
         }
+        st_lex.pop();
         while (c_type == LEX_COMMA) {
             gl();
             Expr();
+            if (st_lex.top() == LEX_STRING) {
+                poliz.push_back(Lex(LEX_SWRITE));
+            } else {
+                poliz.push_back(Lex(LEX_WRITE));
+            }
             st_lex.pop();
-            poliz.push_back(Lex(LEX_WRITE));
         }
         if (c_type == LEX_RPAREN) {
             gl();
@@ -413,10 +411,10 @@ void Parser::Operat() {
         Lex lex1 = curr_lex;
         gl();
         if (c_type == LEX_COLON) {
-            int id_val = lex1.get_value();
-            dec_label(id_val);
+            ungl(curr_lex);
+            ungl(lex1);
             gl();
-            Operat();
+            TaggedOperat();
         } else {
             ungl(curr_lex);
             ungl(lex1);
@@ -428,6 +426,21 @@ void Parser::Operat() {
                (c_type == LEX_FALSE) || (c_type == LEX_TRUE) ||
                (c_type == LEX_LPAREN)) {
         ExprOperat();
+    } else {
+        throw curr_lex;
+    }
+}
+
+// ident : operat
+void Parser::TaggedOperat() {
+    if (c_type != LEX_ID) {
+        throw curr_lex;
+    }
+    dec_label(c_val);
+    gl();
+    if (c_type == LEX_COLON) {
+        gl();
+        Operat();
     } else {
         throw curr_lex;
     }
@@ -462,13 +475,13 @@ void Parser::ExprOperat() {
 
 // Expr -> Assign
 void Parser::Expr() {
-    cout << "Expr " << curr_lex << endl;
+//    cout << "Expr " << curr_lex << endl;
     Assign();
 }
 
 // Assign -> ident = Assign | Or
 void Parser::Assign() {
-    cout << "Assign " << curr_lex << endl;
+//    cout << "Assign " << curr_lex << endl;
     if (c_type == LEX_ID) {
         Lex lex1 = curr_lex;
         gl();
@@ -495,7 +508,7 @@ void Parser::Assign() {
 
 // Or -> And {or And}
 void Parser::Or() {
-    cout << "Or " << curr_lex << endl;
+//    cout << "Or " << curr_lex << endl;
     And();
     while (c_type == LEX_OR) {
         st_lex.push(c_type);
@@ -507,7 +520,7 @@ void Parser::Or() {
 
 // And -> Comp {and Comp}
 void Parser::And() {
-    cout << "And " << curr_lex << endl;
+//    cout << "And " << curr_lex << endl;
     Comp();
     while (c_type == LEX_AND) {
         st_lex.push(c_type);
@@ -519,7 +532,7 @@ void Parser::And() {
 
 // Comp -> Ar_expr [<>= Ar_expr]
 void Parser::Comp() {
-    cout << "Comp " << curr_lex << endl;
+//    cout << "Comp " << curr_lex << endl;
     Ar_expr();
     if (c_type == LEX_EQ || c_type == LEX_NEQ || c_type == LEX_LSS ||
         c_type == LEX_GTR || c_type == LEX_LEQ || c_type == LEX_GEQ) {
@@ -532,7 +545,7 @@ void Parser::Comp() {
 
 // Ar_expr -> Term {+- Term}
 void Parser::Ar_expr() {
-    cout << "Ar_expr " << curr_lex << endl;
+//    cout << "Ar_expr " << curr_lex << endl;
     Term();
     while (c_type == LEX_MINUS || c_type == LEX_PLUS) {
         st_lex.push(c_type);
@@ -544,7 +557,7 @@ void Parser::Ar_expr() {
 
 // Term -> Factor {* / Factor}
 void Parser::Term() {
-    cout << "Term " << curr_lex << endl;
+//    cout << "Term " << curr_lex << endl;
     Factor();
     while (c_type == LEX_TIMES || c_type == LEX_SLASH) {
         st_lex.push(c_type);
@@ -556,7 +569,7 @@ void Parser::Term() {
 
 // Factor -> [not, -] Factor | const | ID | (Assign)
 void Parser::Factor() {
-    cout << "Factor " << curr_lex << endl;
+//    cout << "Factor " << curr_lex << endl;
     type_of_lex type;
     if (c_type == LEX_NOT) {
         gl();
@@ -711,6 +724,7 @@ void Parser::check_id_in_read() {
         throw "not declared";
     }
     poliz.push_back(Lex(POLIZ_ADDRESS, c_val));
+    poliz.push_back(Lex(LEX_READ));
 }
 
 void Parser::dec_label(int id_idx) {
@@ -749,6 +763,7 @@ void Parser::goto_label() {
             throw "expected label";
         }
     } else {
+        TID[c_val].put_declare();
         TID[c_val].put_value(TGOTO.size());
         TGOTO.push_back(vector<int>());
         TGOTO[TID[c_val].get_value()].push_back(poliz.size());
