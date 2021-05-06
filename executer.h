@@ -8,19 +8,25 @@ public:
 
 void Executer::execute(vector<Lex>& poliz) {
     Lex pc_el;
-    stack<int> args;
-    int i, j, index = 0, size = poliz.size();
+    stack<pair<int, int>> args;
+    int index = 0, size = poliz.size();
+    pair<int, int> i, j;
+    Ident* ident_ptr;
     while (index < size) {
         pc_el = poliz[index];
         cout << "-" << index << endl;
         switch (pc_el.get_type()) {
             case LEX_TRUE: case LEX_FALSE: case LEX_NUM: case LEX_STR: case POLIZ_ADDRESS: case POLIZ_LABEL:
-                args.push(pc_el.get_value());
+                args.push(pair<int, int>(pc_el.get_value(), pc_el.get_aux_value()));
                 break;
             case LEX_ID:
-                i = pc_el.get_value();
-                if (TID[i].get_assign()) {
-                    args.push(TID[i].get_value());
+                if (pc_el.get_aux_value() == -1) {
+                    ident_ptr = &TID[pc_el.get_value()];
+                } else {
+                    ident_ptr = &TSTRUCT[pc_el.get_aux_value()].tid[pc_el.get_value()];
+                }
+                if (ident_ptr->get_assign()) {
+                    args.push(pair<int, int>(ident_ptr->get_value(), -1));
                     break;
                 } else {
                     throw "POLIZ: indefinite identifier";
@@ -28,58 +34,64 @@ void Executer::execute(vector<Lex>& poliz) {
 
             case LEX_NOT:
                 from_st(args, i);
-                args.push(!i);
+                args.push(pair<int, int>(!i.first, -1));
                 break;
 
             case LEX_OR:
                 from_st (args, i);
                 from_st (args, j);
-                args.push (j || i);
+                args.push (pair<int, int>(j.first || i.first, -1));
                 break;
 
             case LEX_AND:
                 from_st (args, i);
                 from_st (args, j);
-                args.push (j && i);
+                args.push (pair<int, int>(j.first && i.first, -1));
                 break;
 
             case POLIZ_GO:
                 from_st(args, i);
-                index = i - 1;
+                index = i.first - 1;
                 break;
 
             case POLIZ_FGO:
                 from_st (args, i);
                 from_st (args, j);
-                if (!j) index = i - 1;
+                if (!j.first) index = i.first - 1;
                 break;
 
             case LEX_WRITE:
                 from_st(args, j);
-                cout << j << endl;
+                cout << j.first << endl;
                 break;
 
             case LEX_SWRITE:
                 from_st(args, j);
-                cout << TSTR[j] << endl;
+                cout << TSTR[j.first] << endl;
                 break;
+
 
             case LEX_READ:
                 int k;
                 from_st (args, i);
-                if (TID[i].get_type() == LEX_INT) {
-                    cout << "Input int value for " << TID[i].get_name() << endl;
+                if (i.second == -1) {
+                    ident_ptr = &TID[i.first];
+                } else {
+                    ident_ptr = &TSTRUCT[i.second].tid[i.first];
+                }
+                if (ident_ptr->get_type() == LEX_INT) {
+                    cout << "Input int value for " << ident_ptr->get_name() << endl;
                     cin >> k;
-                    TID[i].put_value(k);
-                } else if (TID[i].get_type() == LEX_STRING) {
+                    ident_ptr->put_value(k);
+                } else if (ident_ptr->get_type() == LEX_STRING) {
                     string s;
-                    cout << "Input string for " << TID[i].get_name() << endl;
+                    cout << "Input string for " << ident_ptr->get_name() << endl;
                     cin >> s;
-                    TSTR[TID[i].get_value()] = s;
+                    TSTR[ident_ptr->get_value()] = s;
                 } else {
                     string j;
                     while (1) {
-                        cout << "Input boolean value (true or false) for " << TID[i].get_name() << endl;
+                        cout << "Input boolean value (true or false) for " << ident_ptr->get_name() << endl;
                         cin >> j;
                         if (j != "true" && j != "false") {
                             cout << "Error in input:true/false" << endl;
@@ -88,41 +100,41 @@ void Executer::execute(vector<Lex>& poliz) {
                         k = (j == "true") ? 1 : 0;
                         break;
                     }
-                    TID[i].put_value(k);
+                    ident_ptr->put_value(k);
                 }
-                TID[i].put_assign();
+                ident_ptr->put_assign();
                 break;
 
             case LEX_PLUS:
                 from_st (args, i);
                 from_st (args, j);
-                args.push (i + j);
+                args.push (pair<int, int>(i.first + j.first, -1));
                 break;
 
             case LEX_SPLUS:
                 from_st (args, i);
                 from_st (args, j);
-                args.push(TSTR.size());
-                TSTR.push_back(TSTR[j] + TSTR[i]);
+                args.push(pair<int, int>(TSTR.size(), -1));
+                TSTR.push_back(TSTR[j.first] + TSTR[i.first]);
                 break;
 
             case LEX_TIMES:
                 from_st (args, i);
                 from_st (args, j);
-                args.push (i * j);
+                args.push (pair<int, int>(i.first * j.first, -1));
                 break;
 
             case LEX_MINUS:
                 from_st (args, i);
                 from_st (args, j);
-                args.push (j - i);
+                args.push (pair<int, int>(j.first - i.first, -1));
                 break;
 
             case LEX_SLASH:
                 from_st ( args, i );
                 from_st ( args, j );
-                if (!i) {
-                    args.push ( j / i );
+                if (!i.first) {
+                    args.push (pair<int, int>(j.first / i.first, -1));
                     break;
                 }
                 else
@@ -131,77 +143,97 @@ void Executer::execute(vector<Lex>& poliz) {
             case LEX_EQ:
                 from_st ( args, i );
                 from_st ( args, j );
-                args.push ( i == j );
+                args.push (pair<int, int>(i.first == j.first, -1));
                 break;
 
             case LEX_LSS:
                 from_st ( args, i );
                 from_st ( args, j );
-                args.push ( j < i );
+                args.push (pair<int, int>(j.first < i.first, -1));
                 break;
 
             case LEX_GTR:
                 from_st ( args, i );
                 from_st ( args, j );
-                args.push ( j > i );
+                args.push (pair<int, int>(j.first > i.first, -1));
                 break;
 
             case LEX_LEQ:
                 from_st ( args, i );
                 from_st ( args, j );
-                args.push ( j <= i );
+                args.push (pair<int, int>(j.first <= i.first, -1));
                 break;
 
             case LEX_GEQ:
                 from_st ( args, i );
                 from_st ( args, j );
-                args.push ( j >= i );
+                args.push (pair<int, int>(j.first >= i.first, -1));
                 break;
 
             case LEX_NEQ:
                 from_st ( args, i );
                 from_st ( args, j );
-                args.push ( j != i );
+                args.push (pair<int, int>(j.first != i.first, -1));
                 break;
 
             case LEX_SEQ:
                 from_st ( args, i );
                 from_st ( args, j );
-                args.push ( i == j );
+                args.push (pair<int, int>(TSTR[j.first].compare(TSTR[i.first]) == 0, -1));
                 break;
 
             case LEX_SLSS:
                 from_st ( args, i );
                 from_st ( args, j );
-                args.push ( j < i );
+                args.push (pair<int, int>(TSTR[j.first].compare(TSTR[i.first]) < 0, -1));
                 break;
 
             case LEX_SGTR:
                 from_st(args, i);
                 from_st(args, j);
-                args.push ( j > i );
+                args.push (pair<int, int>(TSTR[j.first].compare(TSTR[i.first]) > 0, -1));
                 break;
 
             case LEX_SNEQ:
                 from_st(args, i);
                 from_st(args, j);
-                args.push (TSTR[j] != TSTR[i]);
+                args.push (pair<int, int>(TSTR[j.first].compare(TSTR[i.first]) != 0, -1));
                 break;
 
             case LEX_ASSIGN:
                 from_st(args, i);
                 from_st(args, j);
-                TID[j].put_value(i);
-                TID[j].put_assign();
-                args.push(j);
+                if (j.second == -1) {
+                    ident_ptr = &TID[j.first];
+                } else {
+                    ident_ptr = &TSTRUCT[j.second].tid[j.first];
+
+                }
+                ident_ptr->put_value(i.first);
+                ident_ptr->put_assign();
+                args.push(pair<int, int>(ident_ptr->get_value(), -1));
                 break;
 
             case LEX_SASSIGN:
                 from_st(args, i);
                 from_st(args, j);
-                TSTR[TID[j].get_value()] = TSTR[i];
-                TID[j].put_assign();
-                args.push(TID[j].get_value());
+                if (j.second == -1) {
+                    ident_ptr = &TID[j.first];
+                } else {
+                    ident_ptr = &TSTRUCT[j.second].tid[j.first];
+
+                }
+                TSTR[ident_ptr->get_value()] = TSTR[i.first];
+                ident_ptr->put_assign();
+                args.push(pair<int, int>(ident_ptr->get_value(), -1));
+                break;
+
+            case LEX_STRASSIGN:
+                from_st(args, i);
+                from_st(args, j);
+                TSTRUCT[TID[j.first].get_value()] = TSTRUCT[i.first];
+                TID[j.first].put_assign();
+                args.push(pair<int, int>(TID[j.first].get_value(), -1));
                 break;
 
             case LEX_SEMICOLON:

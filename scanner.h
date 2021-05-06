@@ -24,42 +24,49 @@ enum type_of_lex {
     LEX_ASSIGN,
     LEX_PLUS, LEX_MINUS, LEX_TIMES, LEX_SLASH,
     LEX_EQ, LEX_NEQ, LEX_LSS, LEX_GTR, LEX_LEQ, LEX_GEQ,
-    LEX_LPAREN, LEX_RPAREN, LEX_LBRACE, LEX_RBRACE,
+    LEX_LPAREN, LEX_RPAREN, LEX_LBRACE, LEX_RBRACE, // 38
 
     LEX_SPLUS,
     LEX_SEQ, LEX_SNEQ, LEX_SLSS, LEX_SGTR,
     LEX_SASSIGN,
-    LEX_SWRITE,
+    LEX_SWRITE, // 45
 
-    LEX_NUM, // 39
-    LEX_STR, // 40
-    LEX_ID, // 41
+    LEX_STRUCT_TYPE,
+    LEX_STRASSIGN, // 47
 
-    POLIZ_LABEL, // 42
-    POLIZ_ADDRESS, // 43
-    POLIZ_GO, // 44
-    POLIZ_FGO // 45
+    LEX_NUM,
+    LEX_STR,
+    LEX_ID, // 50
+
+    POLIZ_LABEL, // 51
+    POLIZ_ADDRESS, // 52
+    POLIZ_GO, // 53
+    POLIZ_FGO // 54
 };
 
 class Lex {
     type_of_lex t_lex;
     int v_lex;
+    int aux_v_lex;
 public:
-    explicit Lex(type_of_lex t = LEX_NULL, int v = 0) {
+    explicit Lex(type_of_lex t = LEX_NULL, int v = 0, int aux_v = -1) {
         t_lex = t;
         v_lex = v;
+        aux_v_lex = aux_v;
     }
     type_of_lex get_type() const { return t_lex; }
     int get_value() const { return v_lex; }
+    int get_aux_value() const { return aux_v_lex; }
     friend ostream& operator<<(ostream& s, Lex l);
 };
 
 class Ident {
     string      name;
     bool        declare;
-    type_of_lex type_val;
+    type_of_lex type;
     bool        assign;
     int         value;
+    int         struct_type;
 public:
     explicit Ident() {
         declare = false;
@@ -76,17 +83,28 @@ public:
     string get_name() const { return name; }
     bool get_declare() const { return declare; }
     void put_declare() { declare = true; }
-    type_of_lex get_type() const { return type_val; }
-    void put_type(type_of_lex t) { type_val = t; }
+    type_of_lex get_type() const { return type; }
+    void put_type(type_of_lex t) { type = t; }
     bool get_assign() const { return assign; }
     void put_assign() { assign = true; }
     int get_value() const { return value; }
     void put_value(int v) { value = v; }
+    int get_struct_type() const { return struct_type; }
+    void put_struct_type(int t) { struct_type = t; }
 };
 
 vector<Ident> TID;
 
 vector<string> TSTR;
+
+class Struct {
+public:
+    string name;
+    vector<Ident> tid;
+};
+
+vector<Struct> TTYPE;
+vector<Struct> TSTRUCT;
 
 int put (const string& buf) {
     vector<Ident>::const_iterator k;
@@ -191,7 +209,11 @@ ostream& operator<<(ostream &s, Lex l) {
     else if (l.t_lex == LEX_STR)
         t = "Str";
     else if (l.t_lex == LEX_ID)
-        t = "Id " + TID[l.v_lex].get_name();
+        if (l.aux_v_lex == -1) {
+            t = "Id " + TID[l.v_lex].get_name();
+        } else {
+            t = "Id " + TSTRUCT[l.aux_v_lex].name + "." + TSTRUCT[l.aux_v_lex].tid[l.v_lex].get_name();
+        }
     else if ( l.t_lex == POLIZ_LABEL )
         t = "Label";
     else if ( l.t_lex == POLIZ_ADDRESS )
@@ -214,6 +236,8 @@ ostream& operator<<(ostream &s, Lex l) {
         t = "str >";
     else if ( l.t_lex == LEX_SLSS )
         t = "str <";
+    else if (l.t_lex == LEX_STRASSIGN)
+        t = "struct =";
     else
         throw l;
     s << '(' << t << ',' << l.v_lex << ");" << endl;
