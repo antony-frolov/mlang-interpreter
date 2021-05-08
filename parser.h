@@ -1,5 +1,5 @@
-#ifndef PRAK4_PARSER_H
-#define PRAK4_PARSER_H
+#ifndef MLANG_INTERPRETER_PARSER_H
+#define MLANG_INTERPRETER_PARSER_H
 
 #include "stack"
 #include "vector"
@@ -989,6 +989,7 @@ void Parser::goto_label() {
         }
     } else {
         TID[c_val].put_declare();
+        TID[c_val].put_type(LEX_GOTO);
         TID[c_val].put_value(TGOTO.size());
         TGOTO.push_back(vector<int>());
         TGOTO[TID[c_val].get_value()].push_back(poliz.size());
@@ -1034,4 +1035,4 @@ void Parser::init_str_vars(int struct_idx) {
 }
 
 
-#endif //PRAK4_PARSER_H
+#endif //MLANG_INTERPRETER_PARSER_H

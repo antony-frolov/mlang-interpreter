@@ -3,7 +3,7 @@
 
 class Executer {
 public:
-    void execute(vector<Lex>& poliz);
+    static void execute(vector<Lex>& poliz);
 };
 
 void Executer::execute(vector<Lex>& poliz) {
