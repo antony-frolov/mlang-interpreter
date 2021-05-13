@@ -55,7 +55,7 @@ int main() {
         cout << "unexpected symbol " << c << endl;
         return 1;
     }
-    catch (Lex l) {
+    catch (Lex& l) {
         cout << "unexpected lexeme" << l << endl;
         return 1;
     }

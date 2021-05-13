@@ -64,6 +64,7 @@ class Parser {
     void dec_struct_type(int id_idx);
     int dec_struct_var(type_of_lex type, int struct_type_idx);
     void init_str_vars(int struct_idx);
+    void check_labels();
 
     void gl() {
         curr_lex  = scan.get_lex();
@@ -86,6 +87,7 @@ void Parser::analyze() {
     if (c_type != LEX_FIN) {
         throw curr_lex;
     }
+    check_labels();
     for (Lex l : poliz)
         cout << l;
     cout << endl << "Yes!!!" << endl;
@@ -953,7 +955,10 @@ void Parser::check_id_in_read() {
 }
 
 void Parser::dec_label(int id_idx) {
-    if (TID[id_idx].get_declare())
+    if (TID[id_idx].get_declare()) {
+        if (TID[id_idx].get_type() != LEX_GOTO) {
+            throw "variable with this name already exists";
+        }
         if (TID[id_idx].get_assign()) {
             throw "two lables one name";
         } else {
@@ -965,7 +970,7 @@ void Parser::dec_label(int id_idx) {
             TID[id_idx].put_value(poliz.size());
             TID[id_idx].put_assign();
         }
-    else {
+    } else {
         TID[id_idx].put_declare();
         TID[id_idx].put_assign();
         TID[id_idx].put_type(LEX_GOTO);
@@ -1031,6 +1036,14 @@ void Parser::init_str_vars(int struct_idx) {
             TSTR.push_back(string());
         }
         iter += 1;
+    }
+}
+
+void Parser::check_labels() {
+    for (auto iter = TGOTO.begin(); iter != TGOTO.end(); iter++ ) {
+        if (!iter->empty()) {
+            throw "label used but not assigned";
+        }
     }
 }
 
