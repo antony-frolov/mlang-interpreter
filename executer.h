@@ -14,7 +14,7 @@ void Executer::execute(vector<Lex>& poliz) {
     Ident* ident_ptr;
     while (index < size) {
         pc_el = poliz[index];
-        cout << "-" << index << endl;
+//        cout << "-" << index << endl;
         switch (pc_el.get_type()) {
             case LEX_TRUE: case LEX_FALSE: case LEX_NUM: case LEX_STR: case POLIZ_ADDRESS: case POLIZ_LABEL:
                 args.push(pair<int, int>(pc_el.get_value(), pc_el.get_aux_value()));
@@ -138,7 +138,7 @@ void Executer::execute(vector<Lex>& poliz) {
                     break;
                 }
                 else
-                    throw "POLIZ:divide by zero";
+                    throw "POLIZ: divide by zero";
 
             case LEX_EQ:
                 from_st ( args, i );
@@ -246,6 +246,11 @@ void Executer::execute(vector<Lex>& poliz) {
         ++index;
     };//end of while
     cout << "Finish of executing!!!" << endl;
+//    if (args.empty()) {
+//        cout << "args empty" << endl;
+//    } else {
+//        cout << "args NOT empty" << endl;
+//    }
 }
 
 class Interpretator {

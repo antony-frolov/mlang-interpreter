@@ -138,8 +138,8 @@ class Scanner {
         return 0;
     }
     void gc() { c = fgetc(fp); }
-    stack<const Lex> st_lex;
 public:
+    stack<const Lex> st_lex;
     static const vector<const char*> TW, TD;
     explicit Scanner(const char* program) {
         fp = fopen(program,"r");

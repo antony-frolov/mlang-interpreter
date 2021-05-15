@@ -85,12 +85,27 @@ void Parser::analyze() {
     gl();
     Program();
     if (c_type != LEX_FIN) {
-        throw curr_lex;
+        throw "end of program was not reached";
     }
     check_labels();
     for (Lex l : poliz)
         cout << l;
     cout << endl << "Yes!!!" << endl;
+//    if (st_lex.empty()) {
+//        cout << "st_lex empty" << endl;
+//    } else {
+//        cout << "st_lex NOT empty" << endl;
+//    }
+//    if (STBREAK.empty()) {
+//        cout << "STBREAK empty" << endl;
+//    } else {
+//        cout << "STBREAK NOT empty" << endl;
+//    }
+//    if (scan.st_lex.empty()) {
+//        cout << "scan.st_lex empty" << endl;
+//    } else {
+//        cout << "scan.st_lex NOT empty" << endl;
+//    }
 }
 
 // StructDeclars -> /{ StructDeclar /}
@@ -161,7 +176,7 @@ type_of_lex Parser::StructVarType() {
         gl();
         return type;
     } else {
-        throw curr_lex;
+        throw "wrong type in struct variable declaration";
     }
 }
 
@@ -171,7 +186,7 @@ void Parser::StructVar(type_of_lex type, int struct_type_idx) {
     if (c_type == LEX_ID) {
         id_idx = dec_struct_var(type, struct_type_idx);
     } else {
-        throw curr_lex;
+        throw "expected ident to declare";
     }
     gl();
     if (c_type == LEX_ASSIGN) {
@@ -184,24 +199,24 @@ void Parser::StructVar(type_of_lex type, int struct_type_idx) {
 void Parser::StructConst(int type, int struct_type_idx, int id_idx) {
     if (c_type == LEX_NUM) {
         if (type != LEX_INT) {
-            throw curr_lex;
+            throw "types in declaration don't match";
         }
         TTYPE[struct_type_idx].tid[id_idx].put_value(c_val);
         gl();
     } else if (c_type == LEX_STR) {
         if (type != LEX_STRING) {
-            throw curr_lex;
+            throw "types in declaration don't match";
         }
         TTYPE[struct_type_idx].tid[id_idx].put_value(c_val);
         gl();
     } else if ((c_type == LEX_FALSE) || (c_type == LEX_TRUE)) {
         if (type != LEX_BOOL) {
-            throw curr_lex;
+            throw "types in declaration don't match";
         }
         TTYPE[struct_type_idx].tid[id_idx].put_value(c_type == LEX_TRUE ? 1 : 0);
         gl();
     } else {
-        throw curr_lex;
+        throw "assigning in struct declaration failed";
     }
 }
 
@@ -269,10 +284,10 @@ type_of_lex Parser::Type(int& struct_type_idx) {
             gl();
             return LEX_STRUCT;
         } else {
-            throw curr_lex;
+            throw "ident used as type";
         }
     } else {
-        throw curr_lex;
+        throw "wrong type in declaration";
     }
 }
 
@@ -281,7 +296,7 @@ void Parser::Var(type_of_lex type, int struct_type_idx) {
     if (c_type == LEX_ID) {
         dec(type, struct_type_idx, c_val);
     } else {
-        throw curr_lex;
+        throw "expected ident to declare";
     }
     int id_idx = c_val;
     gl();
@@ -297,27 +312,27 @@ void Parser::Var(type_of_lex type, int struct_type_idx) {
 void Parser::Const(type_of_lex type, int id_idx) {
     if (c_type == LEX_NUM) {
         if (type != LEX_INT) {
-            throw curr_lex;
+            throw "types in declaration don't match";
         }
         TID[id_idx].put_value(c_val);
         TID[id_idx].put_assign();
         gl();
     } else if (c_type == LEX_STR) {
         if (type != LEX_STRING) {
-            throw curr_lex;
+            throw "types in declaration don't match";
         }
         TSTR[TID[id_idx].get_value()] = TSTR[c_val];
         TID[id_idx].put_assign();
         gl();
     } else if ((c_type == LEX_FALSE) || (c_type == LEX_TRUE)) {
         if (type != LEX_BOOL) {
-            throw curr_lex;
+            throw "types in declaration don't match";
         }
         TID[id_idx].put_value(c_type == LEX_TRUE ? 1 : 0);
         TID[id_idx].put_assign();
         gl();
     } else {
-        throw curr_lex;
+        throw "assigning in declaration failed";
     }
 }
 
@@ -646,7 +661,7 @@ void Parser::Assign() {
                     lex3 = curr_lex;
                     gl();
                 } else {
-                    throw curr_lex;
+                    throw "expected ident after .";
                 }
                 if (c_type == LEX_ASSIGN) {
                     ungl(curr_lex);
@@ -794,7 +809,7 @@ void Parser::Id(bool address, bool push) {
     }
 //    poliz.push_back(Lex(LEX_ID, c_val));
     if (TID[c_val].get_type() == LEX_STRUCT_TYPE) {
-        throw curr_lex;
+        throw "struct type passed as ident";
     }
     if (TID[c_val].get_type() != LEX_STRUCT) {
         check_id(TID[c_val], push);
@@ -807,7 +822,7 @@ void Parser::Id(bool address, bool push) {
         if (c_type == LEX_POINT) {
             gl();
             if (c_type != LEX_ID) {
-                throw curr_lex;
+                throw "expected ident after .";
             }
             auto iter = find(TSTRUCT[struct_idx].tid.begin(), TSTRUCT[struct_idx].tid.end(),
                                                 TID[c_val].get_name());
@@ -815,7 +830,7 @@ void Parser::Id(bool address, bool push) {
                 check_id(*iter, push);
                 poliz.push_back(Lex(type, iter - TSTRUCT[struct_idx].tid.begin(), struct_idx));
             } else {
-                throw curr_lex;
+                throw "ident not found in struct";
             }
         } else {
             ungl(curr_lex);
