@@ -1,0 +1,36 @@
+/* program
+{
+	int a, b;
+	a = 1;
+	a = a + 1;
+	l : b = 1;
+	goto p;
+	goto l;
+	p : b = 1;
+	write(a);
+} */
+
+program {
+	struct X
+	{
+        int x;
+        boolean y;
+    };
+    int x = 1;
+    X a;
+    a.x = 1;
+    write(a.x);
+	/*
+	int i = 0,j;
+	j = 0;
+	while (i < 15) {
+		write("i now is: ");
+		write(i);
+		i = i + 1;
+		write("And j is:");
+		for (j = 0; j < 5; j = j + 1) {
+			write(j);
+			if (i >= 3){ break;}else{}
+		}
+	} */
+}
