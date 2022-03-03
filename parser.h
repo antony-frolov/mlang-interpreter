@@ -85,7 +85,7 @@ void Parser::analyze() {
     gl();
     Program();
     if (c_type != LEX_FIN) {
-        throw "end of program was not reached";
+        throw curr_lex;
     }
     check_labels();
     for (Lex l : poliz)
@@ -408,6 +408,8 @@ void Parser::Operat() {
                 (c_type == LEX_TRUE) || (c_type == LEX_LPAREN)) {
                 Expr();
                 eq_bool();
+            } else {
+                poliz.push_back(Lex(LEX_TRUE, 1));
             }
             for_pl1 = poliz.size();
             poliz.push_back(Lex());
