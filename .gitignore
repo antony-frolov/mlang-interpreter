@@ -1,7 +1,6 @@
 # Project exclude paths
 /cmake-build-debug/
 CMakeLists.txt
-model_program.txt
 /Example/
 parser_struct.h
 scanner_struct.h
